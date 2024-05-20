@@ -3,6 +3,8 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QMap>
+#include <QStack>
 
 void AdminNeurona::agregarInicio(const Neurona &neurona) {
     listaNeuronas.prepend(neurona);
@@ -88,3 +90,63 @@ void AdminNeurona::recuperarNeuronasDesdeArchivo(const QString &filePath) {
 }
 
 
+void AdminNeurona::generarListaDeAdyacencia() {
+    listaDeAdyacencia.clear();
+    int n = listaNeuronas.size();
+
+    if (n < 2) return;
+
+    for (int i = 0; i < n; i++) {
+        float menor = std::numeric_limits<float>::max();
+        int nodoMenor = -1;
+
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                float distancia = std::sqrt(std::pow(listaNeuronas[i].getPosX() - listaNeuronas[j].getPosX(), 2) +
+                                            std::pow(listaNeuronas[i].getPosY() - listaNeuronas[j].getPosY(), 2));
+
+                if (distancia < menor) {
+                    menor = distancia;
+                    nodoMenor = j;
+                }
+            }
+        }
+
+        if (nodoMenor != -1) {
+            listaDeAdyacencia[listaNeuronas[i].getId()].append(listaNeuronas[nodoMenor].getId());
+            listaDeAdyacencia[listaNeuronas[nodoMenor].getId()].append(listaNeuronas[i].getId());
+        }
+    }
+}
+
+QMap<int, QList<int>> AdminNeurona::getListaDeAdyacencia() const {
+    return listaDeAdyacencia;
+}
+
+QList<int> AdminNeurona::busquedaEnProfundidad(int nodoInicial) const {
+    QList<int> nodosVisitados;
+    QStack<int> pila;
+    QMap<int, bool> visitado;
+
+    pila.push(nodoInicial);
+    visitado[nodoInicial] = true;
+
+    while (!pila.isEmpty()) {
+        int nodoActual = pila.pop();
+        nodosVisitados.append(nodoActual);
+
+        // Obtener los nodos adyacentes al nodo actual
+        QList<int> adyacentes = listaDeAdyacencia[nodoActual];
+
+        // Recorrer los nodos adyacentes
+        for (int adyacente : adyacentes) {
+            // Si el nodo adyacente no ha sido visitado, agregarlo a la pila y marcarlo como visitado
+            if (!visitado.contains(adyacente)) {
+                pila.push(adyacente);
+                visitado[adyacente] = true;
+            }
+        }
+    }
+
+    return nodosVisitados;
+}

@@ -1,10 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#include <QGraphicsTextItem>
 #include <QMainWindow>
 #include "adminneurona.h"
 #include <QPlainTextEdit>
 #include <QGraphicsScene>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -43,10 +44,17 @@ private slots:
 
     void on_clasV_clicked();
 
+    void on_adyacencia_clicked();
+
+    void on_recorP_clicked();
+
 private:
     Ui::MainWindow *ui;
     AdminNeurona administrador;
     QPlainTextEdit *neuronasTextEdit;
     QGraphicsScene scene;
+
+
+
 };
 #endif // MAINWINDOW_H

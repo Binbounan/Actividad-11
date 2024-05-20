@@ -10,6 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QPixmap pixmap("cat.png");
+    ui->image->setPixmap(pixmap);
+
     QString tabStyle = "QTabBar::tab { background-color: #FA7FF4; }"
                        "QTabBar::tab:selected { background-color: #FA7FF4 ; color: green; }";
     ui->tabWidget->setStyleSheet(tabStyle);
@@ -25,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->clasV->setStyleSheet("background-color: #ED57FA ; color: black;");
     ui->Mpuntos->setStyleSheet("background-color: #C57FFA ; color: black;");
     ui->Draw->setStyleSheet("background-color: #FAF07F ; color: black;");
+    ui->recorP->setStyleSheet("background-color: #FFE3B0; color: black");
+    ui->adyacencia->setStyleSheet("background-color: #E327E6; color: black;");
 
 }
 
@@ -237,7 +242,7 @@ void MainWindow::on_grafica_clicked()
     // Obtener la lista de neuronas desde el administrador
     const QList<Neurona>& neuronas = administrador.getListaNeuronas();
 
-     scene.clear();
+    scene.clear();
 
     for (const Neurona &N : neuronas) {
 
@@ -265,7 +270,7 @@ void MainWindow::on_clasi_clicked()
 
     for (int i = 0; i < listaNeuronas.size() - 1; ++i) {
         for (int j = 0; j < listaNeuronas.size() - i - 1; ++j) {                 //metodo burbuja ;D bucle for recorre la lista y compara elementos y hace intrcambio de ser
-                                                                                    //necesario
+            //necesario
             if (listaNeuronas[j].getId() > listaNeuronas[j + 1].getId()) {
 
                 std::swap(listaNeuronas[j], listaNeuronas[j + 1]);
@@ -285,7 +290,7 @@ void MainWindow::on_clasi_clicked()
 void MainWindow::on_Mpuntos_clicked()
 {
 
-            scene.clear();
+    scene.clear();
 
 
     const QList<Neurona>& neuronas = administrador.getListaNeuronas();
@@ -293,6 +298,13 @@ void MainWindow::on_Mpuntos_clicked()
 
     for (const Neurona& neurona : neuronas) {
         scene.addEllipse(neurona.getPosX(), neurona.getPosY(), 5, 5, QPen(), QBrush(Qt::black));
+
+
+        // Mostrar el ID de la neurona como texto
+        QGraphicsTextItem *text = scene.addText(QString::number(neurona.getId()));
+        text->setPos(neurona.getPosX() + 10, neurona.getPosY() + 10);
+
+
     }
 
 
@@ -302,7 +314,6 @@ void MainWindow::on_Mpuntos_clicked()
 
 void MainWindow::on_Draw_clicked()
 {
-
     const QList<Neurona>& neuronas = administrador.getListaNeuronas();
 
 
@@ -323,12 +334,25 @@ void MainWindow::on_Draw_clicked()
             }
         }
 
+        for (const Neurona& neurona : neuronas) {
+            scene.addEllipse(neurona.getPosX(), neurona.getPosY(), 5, 5, QPen(), QBrush(Qt::black));
+
+
+            // Mostrar el ID de la neurona como texto
+            QGraphicsTextItem *text = scene.addText(QString::number(neurona.getId()));
+            text->setPos(neurona.getPosX() + 10, neurona.getPosY() + 10);
+
+
+        }
+
         scene.addLine(neuronas[i].getPosX(), neuronas[i].getPosY(), puntoMasCercano.x(), puntoMasCercano.y(), QPen(Qt::red));
     }
 
 
     ui->dibujo->setScene(&scene);
+
 }
+
 
 
 void MainWindow::on_clasV_clicked()
@@ -339,7 +363,7 @@ void MainWindow::on_clasV_clicked()
 
     for (int i = 0; i < listaNeuronas.size() - 1; ++i) {
         for (int j = 0; j < listaNeuronas.size() - i - 1; ++j) {                 //metodo burbuja ;D bucle for recorre la lista y compara elementos y hace intrcambio de ser
-                                                                                  //necesario
+            //necesario
             if (listaNeuronas[j].getVoltaje() > listaNeuronas[j + 1].getVoltaje()) {
 
                 std::swap(listaNeuronas[j], listaNeuronas[j + 1]);
@@ -353,5 +377,61 @@ void MainWindow::on_clasV_clicked()
         textoNeuronas += QString("ID: %1, Voltaje: %2\n").arg(neurona.getId()).arg(neurona.getVoltaje());
     }
     ui->neuronasInfo->setPlainText(textoNeuronas);
+}
+
+
+
+
+void MainWindow::on_adyacencia_clicked()    //funcion para el boton de la adyacencia
+{
+
+    administrador.generarListaDeAdyacencia();
+
+
+    QMap<int, QList<int>> listaDeAdyacencia = administrador.getListaDeAdyacencia(); //obtenemos lista de adyacencia
+
+
+    ui->ADYA->clear();
+
+
+    for (auto it = listaDeAdyacencia.begin(); it != listaDeAdyacencia.end(); ++it) {
+        int neuronaId = it.key();
+        QList<int> adyacentes = it.value();
+
+        QString info = "Neurona ID: " + QString::number(neuronaId) + " es adyacente a las neuronas con IDs: ";
+        for (int adyacente : adyacentes) {
+            info += QString::number(adyacente) + ", ";
+        }
+        info.chop(2); // Eliminar la coma y el espacio extra al final
+        info += "\n";
+
+        ui->ADYA->insertPlainText(info);
+    }
+
+}
+
+
+void MainWindow::on_recorP_clicked()
+{
+    // Obtener el nodo inicial desde la interfaz de usuario
+    QString nodoInicialStr = ui->lineEditNodoInicial->text();
+    bool ok;
+    int nodoInicial = nodoInicialStr.toInt(&ok);
+
+    if (!ok) {
+
+        qDebug() << "El nodo inicial ingresado no es un numero valido";
+        return;
+    }
+
+    // Realizar la búsqueda en profundidad
+    QList<int> resultado = administrador.busquedaEnProfundidad(nodoInicial);
+
+
+    QString resultadoStr = "Resultado de la busqueda en profundidad:\n";
+    for (int nodo : resultado) {
+        resultadoStr += QString::number(nodo) + "\n";
+    }
+    ui->recorr->setPlainText(resultadoStr);
 }
 
